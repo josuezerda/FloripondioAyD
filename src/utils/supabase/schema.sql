@@ -186,7 +186,7 @@ drop policy if exists "Public Access" on storage.objects;
 create policy "Public Access" on storage.objects for select using ( bucket_id = 'public_assets' );
 
 drop policy if exists "Admin Insert" on storage.objects;
-create policy "Admin Insert" on storage.objects for insert using ( 
+create policy "Admin Insert" on storage.objects for insert with check ( 
     bucket_id = 'public_assets' and public.is_admin()
 );
 
