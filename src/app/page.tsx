@@ -4,9 +4,23 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingCart, ChevronDown } from 'lucide-react';
+import { createClient } from '@/utils/supabase/client';
 
 export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [promos, setPromos] = useState<Record<string, any>>({});
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function fetchPromos() {
+      const { data } = await supabase.from('promos').select('*');
+      if (data) {
+        const promosMap = data.reduce((acc: any, p: any) => ({ ...acc, [p.id]: p }), {});
+        setPromos(promosMap);
+      }
+    }
+    fetchPromos();
+  }, []);
 
   const handlePromoPayment = async (title: string, price: number, description: string) => {
     setIsProcessing(true);
@@ -120,69 +134,73 @@ export default function Home() {
             <div className="flex flex-col lg:flex-row items-stretch gap-8">
 
               {/* Combo 1 */}
-              <div className="flex-1 bg-white/10 backdrop-blur-md rounded-[3rem] p-8 md:p-10 border border-white/20 shadow-2xl flex flex-col">
-                <h3 className="text-3xl font-bold mb-2">🎉 Combo "Mesa Soñada"</h3>
-                <p className="text-pink-100 mb-6">Mesa dulce temática completa con decoración y montaje.</p>
+              {promos['combo_1'] && promos['combo_1'].is_active && (
+                <div className="flex-1 bg-white/10 backdrop-blur-md rounded-[3rem] p-8 md:p-10 border border-white/20 shadow-2xl flex flex-col">
+                  <h3 className="text-3xl font-bold mb-2">🎉 {promos['combo_1'].title}</h3>
+                  <p className="text-pink-100 mb-6">{promos['combo_1'].description}</p>
 
-                <div className="mb-6 pb-6 border-b border-white/20">
-                  <div className="text-lg text-pink-200 line-through mb-1">Valor real: $850.000</div>
-                  <div className="text-4xl lg:text-5xl font-extrabold flex items-center gap-3">
-                    🔥 $500.000 <span className="text-sm font-normal text-pink-100 uppercase tracking-widest">(Edición Especial)</span>
+                  <div className="mb-6 pb-6 border-b border-white/20">
+                    <div className="text-lg text-pink-200 line-through mb-1">Valor real: ${promos['combo_1'].real_price?.toLocaleString('es-AR')}</div>
+                    <div className="text-4xl lg:text-5xl font-extrabold flex items-center gap-3">
+                      🔥 ${promos['combo_1'].price?.toLocaleString('es-AR')} <span className="text-sm font-normal text-pink-100 uppercase tracking-widest">(Edición Especial)</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4 mt-auto pt-6">
+                    <button
+                      onClick={() => handlePromoPayment(promos['combo_1'].title, promos['combo_1'].price, promos['combo_1'].description)}
+                      disabled={isProcessing}
+                      className="flex-1 bg-white text-[#FF4F8B] py-4 rounded-full font-bold shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"
+                    >
+                      {isProcessing ? 'Procesando...' : 'Pagar con Mercado Pago'}
+                    </button>
+                    <a
+                      href={`https://wa.me/5493855196364?text=Hola! Quiero reservar el ${promos['combo_1'].title} de $${promos['combo_1'].price?.toLocaleString('es-AR')} en efectivo.`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 bg-transparent border-2 border-white text-white py-4 rounded-full font-bold hover:bg-white/10 transition-colors flex items-center justify-center text-center"
+                    >
+                      Efectivo
+                    </a>
                   </div>
                 </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 mt-auto pt-6">
-                  <button
-                    onClick={() => handlePromoPayment('Combo Mesa Soñada', 500000, 'Mesa dulce temática completa con decoración y montaje')}
-                    disabled={isProcessing}
-                    className="flex-1 bg-white text-[#FF4F8B] py-4 rounded-full font-bold shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"
-                  >
-                    {isProcessing ? 'Procesando...' : 'Pagar con Mercado Pago'}
-                  </button>
-                  <a
-                    href="https://wa.me/5493855196364?text=Hola!%20Quiero%20reservar%20el%20Combo%201%20(Mesa%20Soñada)%20de%20$500.000%20en%20efectivo."
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 bg-transparent border-2 border-white text-white py-4 rounded-full font-bold hover:bg-white/10 transition-colors flex items-center justify-center text-center"
-                  >
-                    Efectivo
-                  </a>
-                </div>
-              </div>
+              )}
 
               {/* Combo 2 */}
-              <div className="flex-1 bg-white/10 backdrop-blur-md rounded-[3rem] p-8 md:p-10 border border-white/20 shadow-2xl flex flex-col relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 font-bold px-4 py-1 rounded-bl-xl text-sm z-10 shadow-md">
-                  ¡Más Completo!
-                </div>
-                <h3 className="text-3xl font-bold mb-2 z-10">🎉 Combo "Mundo Mágico"</h3>
-                <p className="text-pink-100 mb-6 z-10">Mini escenografía temática con ambientación completa.</p>
+              {promos['combo_2'] && promos['combo_2'].is_active && (
+                <div className="flex-1 bg-white/10 backdrop-blur-md rounded-[3rem] p-8 md:p-10 border border-white/20 shadow-2xl flex flex-col relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 font-bold px-4 py-1 rounded-bl-xl text-sm z-10 shadow-md">
+                    ¡Más Completo!
+                  </div>
+                  <h3 className="text-3xl font-bold mb-2 z-10">🎉 {promos['combo_2'].title}</h3>
+                  <p className="text-pink-100 mb-6 z-10">{promos['combo_2'].description}</p>
 
-                <div className="mb-6 pb-6 border-b border-white/20 z-10">
-                  <div className="text-lg text-pink-200 line-through mb-1">Valor real: $950.000</div>
-                  <div className="text-4xl lg:text-5xl font-extrabold flex items-center gap-3">
-                    🔥 $600.000 <span className="text-sm font-normal text-pink-100 uppercase tracking-widest">(Edición Especial)</span>
+                  <div className="mb-6 pb-6 border-b border-white/20 z-10">
+                    <div className="text-lg text-pink-200 line-through mb-1">Valor real: ${promos['combo_2'].real_price?.toLocaleString('es-AR')}</div>
+                    <div className="text-4xl lg:text-5xl font-extrabold flex items-center gap-3">
+                      🔥 ${promos['combo_2'].price?.toLocaleString('es-AR')} <span className="text-sm font-normal text-pink-100 uppercase tracking-widest">(Edición Especial)</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4 mt-auto pt-6 z-10">
+                    <button
+                      onClick={() => handlePromoPayment(promos['combo_2'].title, promos['combo_2'].price, promos['combo_2'].description)}
+                      disabled={isProcessing}
+                      className="flex-1 bg-white text-[#FF4F8B] py-4 rounded-full font-bold shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"
+                    >
+                      {isProcessing ? 'Procesando...' : 'Pagar con Mercado Pago'}
+                    </button>
+                    <a
+                      href={`https://wa.me/5493855196364?text=Hola! Quiero reservar el ${promos['combo_2'].title} de $${promos['combo_2'].price?.toLocaleString('es-AR')} en efectivo.`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 bg-transparent border-2 border-white text-white py-4 rounded-full font-bold hover:bg-white/10 transition-colors flex items-center justify-center text-center"
+                    >
+                      Efectivo
+                    </a>
                   </div>
                 </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 mt-auto pt-6 z-10">
-                  <button
-                    onClick={() => handlePromoPayment('Combo Mundo Mágico', 600000, 'Mini escenografía temática con ambientación completa')}
-                    disabled={isProcessing}
-                    className="flex-1 bg-white text-[#FF4F8B] py-4 rounded-full font-bold shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"
-                  >
-                    {isProcessing ? 'Procesando...' : 'Pagar con Mercado Pago'}
-                  </button>
-                  <a
-                    href="https://wa.me/5493855196364?text=Hola!%20Quiero%20reservar%20el%20Combo%202%20(Mundo%20Mágico)%20de%20$600.000%20en%20efectivo."
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 bg-transparent border-2 border-white text-white py-4 rounded-full font-bold hover:bg-white/10 transition-colors flex items-center justify-center text-center"
-                  >
-                    Efectivo
-                  </a>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Bonuses and Conditions Grid */}
