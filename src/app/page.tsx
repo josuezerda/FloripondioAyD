@@ -8,16 +8,16 @@ import { ShoppingCart, ChevronDown } from 'lucide-react';
 export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handlePromoPayment = async () => {
+  const handlePromoPayment = async (title: string, price: number, description: string) => {
     setIsProcessing(true);
     try {
       const res = await fetch('/api/mercadopago/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: 'Promo Mini Escenográfica',
-          price: 500000,
-          description: 'Decoración mini escenográfica con globos, nombres, torta 2kg, cajitas'
+          title: title,
+          price: price,
+          description: description
         })
       });
       const data = await res.json();
@@ -97,7 +97,7 @@ export default function Home() {
 
         {/* 
           ====================================================================
-          PROMO ESPECIAL ($500.000)
+          FLORIPONDIO FEST (Promos)
           ====================================================================
         */}
         <section className="relative w-full py-20 bg-[#FF4F8B] text-white">
@@ -105,60 +105,125 @@ export default function Home() {
             <div className="w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
           </div>
           <div className="container px-4 md:px-8 mx-auto relative z-10">
-            <div className="flex flex-col md:flex-row items-center gap-12 bg-white/10 backdrop-blur-md rounded-[3rem] p-8 md:p-12 border border-white/20 shadow-2xl">
+            <div className="text-center mb-12">
+              <div className="inline-block bg-white text-[#FF4F8B] font-bold px-4 py-1.5 rounded-full text-sm uppercase tracking-wide mb-4 shadow-sm">
+                Oferta Limitada
+              </div>
+              <h2 className="font-['var(--font-just-hello)'] text-6xl md:text-8xl leading-none mb-6">
+                Floripondio Fest
+              </h2>
+              <p className="text-xl md:text-2xl font-light max-w-3xl mx-auto">
+                Lanzamos combos exclusivos con temáticas que ya enamoraron, a un valor especial de cierre de temporada. Reservá tu ambientación completa y asegurá una celebración soñada.
+              </p>
+            </div>
 
-              {/* Promo Banner / Info */}
-              <div className="flex-1 space-y-6">
-                <div className="inline-block bg-white text-[#FF4F8B] font-bold px-4 py-1.5 rounded-full text-sm uppercase tracking-wide mb-2 shadow-sm">
-                  Oferta Limitada
+            <div className="flex flex-col lg:flex-row items-stretch gap-8">
+
+              {/* Combo 1 */}
+              <div className="flex-1 bg-white/10 backdrop-blur-md rounded-[3rem] p-8 md:p-10 border border-white/20 shadow-2xl flex flex-col">
+                <h3 className="text-3xl font-bold mb-2">🎉 Combo "Mesa Soñada"</h3>
+                <p className="text-pink-100 mb-6">Mesa dulce temática completa con decoración y montaje.</p>
+
+                <div className="mb-6 pb-6 border-b border-white/20">
+                  <div className="text-lg text-pink-200 line-through mb-1">Valor real: $850.000</div>
+                  <div className="text-4xl lg:text-5xl font-extrabold flex items-center gap-3">
+                    🔥 $500.000 <span className="text-sm font-normal text-pink-100 uppercase tracking-widest">(Edición Especial)</span>
+                  </div>
                 </div>
-                <h2 className="font-['var(--font-just-hello)'] text-6xl md:text-7xl leading-none">
-                  Promo Mini Escenográfica
-                </h2>
-                <div className="text-4xl font-extrabold pb-4 border-b border-white/30">
-                  $500.000
-                </div>
 
-                <ul className="space-y-3 font-light text-lg">
-                  <li className="flex items-center gap-2"><ArrowRightIcon className="h-5 w-5" /> Temáticas ya existentes a elección</li>
-                  <li className="flex items-center gap-2"><ArrowRightIcon className="h-5 w-5" /> Ornamentación, globos, personajes y alfombras</li>
-                  <li className="flex items-center gap-2"><ArrowRightIcon className="h-5 w-5" /> Bases alzadas para los dulces</li>
-                  <li className="flex items-center gap-2 text-pink-100 font-medium"><ArrowRightIcon className="h-5 w-5" /> Torta de 2kg personalizada</li>
-                  <li className="flex items-center gap-2"><ArrowRightIcon className="h-5 w-5" /> 20 cajitas golosineras (vacías)</li>
-                  <li className="flex items-center gap-2"><ArrowRightIcon className="h-5 w-5" /> 12 cajitas mini candy</li>
-                </ul>
-
-                <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                <div className="flex flex-col sm:flex-row gap-4 mt-auto pt-6">
                   <button
-                    onClick={handlePromoPayment}
+                    onClick={() => handlePromoPayment('Combo Mesa Soñada', 500000, 'Mesa dulce temática completa con decoración y montaje')}
                     disabled={isProcessing}
                     className="flex-1 bg-white text-[#FF4F8B] py-4 rounded-full font-bold shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"
                   >
                     {isProcessing ? 'Procesando...' : 'Pagar con Mercado Pago'}
                   </button>
                   <a
-                    href="https://wa.me/5493855196364?text=Hola!%20Quiero%20reservar%20la%20Promo%20Mini%20Escenográfica%20de%20$500.000%20en%20efectivo."
+                    href="https://wa.me/5493855196364?text=Hola!%20Quiero%20reservar%20el%20Combo%201%20(Mesa%20Soñada)%20de%20$500.000%20en%20efectivo."
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 bg-transparent border-2 border-white text-white py-4 rounded-full font-bold hover:bg-white/10 transition-colors flex items-center justify-center text-center"
                   >
-                    Efectivo (WhatsApp)
+                    Efectivo
                   </a>
                 </div>
               </div>
 
-              {/* Promo Image */}
-              <div className="w-full md:w-1/2 lg:w-2/5">
-                <div className="relative aspect-square w-full rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white/30 rotate-3 hover:rotate-0 transition-transform duration-500">
-                  <Image
-                    src="/promo.jpg"
-                    alt="Promo Decoración"
-                    fill
-                    className="object-cover"
-                  />
+              {/* Combo 2 */}
+              <div className="flex-1 bg-white/10 backdrop-blur-md rounded-[3rem] p-8 md:p-10 border border-white/20 shadow-2xl flex flex-col relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 font-bold px-4 py-1 rounded-bl-xl text-sm z-10 shadow-md">
+                  ¡Más Completo!
+                </div>
+                <h3 className="text-3xl font-bold mb-2 z-10">🎉 Combo "Mundo Mágico"</h3>
+                <p className="text-pink-100 mb-6 z-10">Mini escenografía temática con ambientación completa.</p>
+
+                <div className="mb-6 pb-6 border-b border-white/20 z-10">
+                  <div className="text-lg text-pink-200 line-through mb-1">Valor real: $950.000</div>
+                  <div className="text-4xl lg:text-5xl font-extrabold flex items-center gap-3">
+                    🔥 $600.000 <span className="text-sm font-normal text-pink-100 uppercase tracking-widest">(Edición Especial)</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 mt-auto pt-6 z-10">
+                  <button
+                    onClick={() => handlePromoPayment('Combo Mundo Mágico', 600000, 'Mini escenografía temática con ambientación completa')}
+                    disabled={isProcessing}
+                    className="flex-1 bg-white text-[#FF4F8B] py-4 rounded-full font-bold shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2"
+                  >
+                    {isProcessing ? 'Procesando...' : 'Pagar con Mercado Pago'}
+                  </button>
+                  <a
+                    href="https://wa.me/5493855196364?text=Hola!%20Quiero%20reservar%20el%20Combo%202%20(Mundo%20Mágico)%20de%20$600.000%20en%20efectivo."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 bg-transparent border-2 border-white text-white py-4 rounded-full font-bold hover:bg-white/10 transition-colors flex items-center justify-center text-center"
+                  >
+                    Efectivo
+                  </a>
                 </div>
               </div>
             </div>
+
+            {/* Bonuses and Conditions Grid */}
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+              {/* Bonus Items */}
+              <div className="lg:col-span-2 bg-[#E11D62] rounded-[2rem] p-8 shadow-inner border border-white/10 flex flex-col md:flex-row gap-8 items-center">
+                <div className="flex-1">
+                  <h4 className="text-2xl font-bold flex items-center gap-2 mb-4">🎁 Bonus de Regalo en Todos los Combos</h4>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-pink-50">
+                    <li className="flex items-center gap-2"><ArrowRightIcon className="h-4 w-4 text-pink-300" /> Torta de 2 kg</li>
+                    <li className="flex items-center gap-2"><ArrowRightIcon className="h-4 w-4 text-pink-300" /> 6 galletas decoradas</li>
+                    <li className="flex items-center gap-2"><ArrowRightIcon className="h-4 w-4 text-pink-300" /> 6 cupcakes</li>
+                    <li className="flex items-center gap-2"><ArrowRightIcon className="h-4 w-4 text-pink-300" /> 6 alfajores sable</li>
+                    <li className="flex items-center gap-2"><ArrowRightIcon className="h-4 w-4 text-pink-300" /> 20 cajitas felices</li>
+                    <li className="flex items-center gap-2"><ArrowRightIcon className="h-4 w-4 text-pink-300" /> 10 mini candy básicas</li>
+                  </ul>
+                </div>
+                <div className="w-full md:w-1/3 aspect-square relative rounded-2xl overflow-hidden shadow-lg border-2 border-white/20 rotate-3">
+                  <Image src="/promo.jpg" alt="Bonus Decoración" fill className="object-cover" />
+                </div>
+              </div>
+
+              {/* Legal / Conditions */}
+              <div className="bg-[#E11D62] rounded-[2rem] p-8 shadow-inner border border-white/10 flex flex-col justify-center space-y-6">
+                <div>
+                  <h5 className="font-bold text-lg mb-2 flex items-center gap-2">📅 Validez de Promo</h5>
+                  <p className="text-pink-100 text-sm leading-relaxed">Válida reservando hasta el <strong>31/03</strong>, exclusiva para eventos a realizarse entre Marzo y Junio.</p>
+                </div>
+                <div>
+                  <h5 className="font-bold text-lg mb-2 flex items-center gap-2">💳 Condiciones</h5>
+                  <p className="text-pink-100 text-sm leading-relaxed">Válida en un solo pago. Elegí entre nuestras temáticas más pedidas. ¡Consultá disponibilidad!</p>
+                </div>
+                <div className="bg-white/20 rounded-xl p-4 border border-white/30">
+                  <h5 className="font-bold text-yellow-300 mb-1 flex items-center gap-2">💰 Beneficio Extra Efectivo</h5>
+                  <p className="text-sm">Pagando en efectivo, te bonificamos el sector para regalos. ✨ Reservás ahora y solo te ocupás de disfrutar de la fiesta.</p>
+                </div>
+              </div>
+
+            </div>
+
           </div>
         </section>
 
