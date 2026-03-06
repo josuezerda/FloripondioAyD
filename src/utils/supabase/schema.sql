@@ -81,23 +81,26 @@ create policy "Promos are viewable by everyone." on promos for select using (tru
 drop policy if exists "Users can view their own subscriptions." on subscriptions;
 create policy "Users can view their own subscriptions." on subscriptions for select using (auth.uid() = profile_id);
 
+-- Helper function to avoid infinite recursion in policies
+create or replace function public.is_admin()
+returns boolean as $$
+declare
+  status boolean;
+begin
+  select (role = 'admin') into status from public.profiles where id = auth.uid();
+  return coalesce(status, false);
+end;
+$$ language plpgsql security definer;
+
 -- Admin Policies for full access
 drop policy if exists "Admins can do everything on membership_plans" on membership_plans;
-create policy "Admins can do everything on membership_plans" on membership_plans for all using (
-  exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-);
+create policy "Admins can do everything on membership_plans" on membership_plans for all using (public.is_admin());
 drop policy if exists "Admins can do everything on promos" on promos;
-create policy "Admins can do everything on promos" on promos for all using (
-  exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-);
+create policy "Admins can do everything on promos" on promos for all using (public.is_admin());
 drop policy if exists "Admins can do everything on subscriptions" on subscriptions;
-create policy "Admins can do everything on subscriptions" on subscriptions for all using (
-  exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-);
+create policy "Admins can do everything on subscriptions" on subscriptions for all using (public.is_admin());
 drop policy if exists "Admins can view all profiles" on profiles;
-create policy "Admins can view all profiles" on profiles for select using (
-  exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
-);
+create policy "Admins can view all profiles" on profiles for select using (public.is_admin());
 drop policy if exists "Users can view own profile" on profiles;
 create policy "Users can view own profile" on profiles for select using (auth.uid() = id);
 drop policy if exists "Users can update own profile" on profiles;
