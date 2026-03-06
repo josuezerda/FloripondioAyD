@@ -11,6 +11,7 @@ type Promo = {
     price: number;
     real_price: number;
     is_active: boolean;
+    image_url?: string | null;
 };
 
 export default function AdminPromosPage() {
@@ -44,7 +45,8 @@ export default function AdminPromosPage() {
                 description: promo.description,
                 price: promo.price,
                 real_price: promo.real_price,
-                is_active: promo.is_active
+                is_active: promo.is_active,
+                image_url: promo.image_url
             })
             .eq('id', id);
 
@@ -55,8 +57,44 @@ export default function AdminPromosPage() {
         }
 
         setSavingId(null);
-        // Hide message after 3 seconds
         setTimeout(() => setMessage(null), 3000);
+    };
+
+    const handleImageUpload = async (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0) return;
+
+        const file = e.target.files[0];
+        setSavingId(id);
+        setMessage(null);
+
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `promo_${id}_${Date.now()}.${fileExt}`;
+            const filePath = `promos/${fileName}`;
+
+            // Upload image to Supabase Storage
+            const { error: uploadError } = await supabase.storage
+                .from('public_assets')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            // Get the URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('public_assets')
+                .getPublicUrl(filePath);
+
+            // Update local state, user still has to click "Guardar Cambios"
+            handleChange(id, 'image_url', publicUrl);
+
+            setMessage({ text: 'Imagen subida (Recuerda presionar Guardar).', type: 'success' });
+        } catch (error: any) {
+            console.error('Error subiendo imagen:', error);
+            setMessage({ text: 'Error al subir la imagen.', type: 'error' });
+        } finally {
+            setSavingId(null);
+            setTimeout(() => setMessage(null), 3000);
+        }
     };
 
     const handleChange = (id: string, field: keyof Promo, value: any) => {
@@ -86,7 +124,23 @@ export default function AdminPromosPage() {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 {promos.map((promo) => (
                     <div key={promo.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col space-y-4">
-                        <div className="font-bold text-lg text-gray-500 uppercase tracking-widest border-b pb-2 mb-2">ID: {promo.id}</div>
+                        <div className="font-bold text-lg text-gray-500 uppercase tracking-widest border-b pb-2 mb-2 flex justify-between items-center">
+                            <span>ID: {promo.id}</span>
+                            {promo.image_url && (
+                                <img src={promo.image_url} alt="Vista previa" className="w-12 h-12 object-cover rounded-lg border shadow-sm" />
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Imagen (Banner/Foto)</label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(promo.id, e)}
+                                disabled={savingId === promo.id}
+                                className="w-full px-4 py-2 bg-white text-neutral-900 border rounded-xl focus:ring-[#FF4F8B] focus:border-[#FF4F8B] text-sm"
+                            />
+                        </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Título del Combo</label>
