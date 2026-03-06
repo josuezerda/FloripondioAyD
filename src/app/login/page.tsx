@@ -1,68 +1,110 @@
-import { Mail, Lock, ArrowRight, Github } from 'lucide-react';
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default function LoginPage() {
-    return (
-        <div className="min-h-screen flex flex-col justify-center items-center bg-neutral-50 dark:bg-neutral-950 p-4 font-sans text-neutral-900 dark:text-neutral-100">
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
+    const supabase = createClient();
 
-            {/* Background decoration */}
-            <div className="absolute top-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 blur-[120px]"></div>
-                <div className="absolute top-[60%] -right-[10%] w-[40%] h-[40%] rounded-full bg-emerald-500/10 blur-[100px]"></div>
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError(null);
+
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
+
+        if (authError) {
+            setError('Credenciales inválidas. Por favor, intenta de nuevo.');
+            setIsLoading(false);
+            return;
+        }
+
+        // Check if user is admin
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', authData.user?.id)
+            .single();
+
+        if (profile?.role === 'admin') {
+            router.refresh(); // Ensure Server Components get the fresh cookie
+            router.push('/admin');
+        } else {
+            router.refresh();
+            router.push('/');
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-[#FFF0F5] flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+            {/* Decorative Blur */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-[#FFE4EE] rounded-full filter blur-3xl opacity-70 -translate-y-1/2 translate-x-1/3 z-0"></div>
+
+            <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 flex flex-col items-center">
+                <Link href="/" className="mb-6 block relative h-20 w-48">
+                    <Image
+                        src="/logo.png"
+                        alt="Floripondio Logo"
+                        fill
+                        className="object-contain"
+                    />
+                </Link>
+                <h2 className="mt-2 text-center text-3xl font-extrabold text-neutral-900 font-['var(--font-just-hello)'] tracking-wide">
+                    Acceso Administrador
+                </h2>
             </div>
 
-            <div className="relative z-10 w-full max-w-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-sm">
-                <div className="p-8">
+            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+                <div className="bg-white py-8 px-4 shadow-xl sm:rounded-[2rem] sm:px-10 border border-pink-100">
+                    <form className="space-y-6" onSubmit={handleLogin}>
+                        {error && (
+                            <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm border border-red-100">
+                                {error}
+                            </div>
+                        )}
 
-                    <div className="mb-8 text-center space-y-2">
-                        <h1 className="text-3xl font-extrabold tracking-tight">
-                            Bienvenido a <span className="bg-gradient-to-r from-blue-500 to-emerald-500 text-transparent bg-clip-text">Floripondio</span>
-                        </h1>
-                        <p className="text-neutral-500 dark:text-neutral-400 text-sm">
-                            Ingresa a tu cuenta para continuar
-                        </p>
-                    </div>
-
-                    <form action="#" className="space-y-5">
-                        <div className="space-y-2">
-                            <label htmlFor="email" className="block text-sm font-medium">Correo Electrónico</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Mail className="h-5 w-5 text-neutral-400" />
-                                </div>
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
+                                Email
+                            </label>
+                            <div className="mt-1">
                                 <input
                                     id="email"
                                     name="email"
                                     type="email"
-                                    autoComplete="email"
                                     required
-                                    className="block w-full pl-10 pr-3 py-3 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50 dark:bg-neutral-950/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500/50 sm:text-sm transition-all outline-none"
-                                    placeholder="admin@floripondioayd.com.ar"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="appearance-none block w-full px-4 py-3 bg-white text-neutral-900 border border-neutral-200 rounded-xl shadow-sm placeholder-neutral-400 focus:outline-none focus:ring-[#FF4F8B] focus:border-[#FF4F8B] sm:text-sm transition-colors"
+                                    placeholder="ejemplo@floripondioayd.com.ar"
                                 />
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="password" className="block text-sm font-medium">Contraseña</label>
-                                <div className="text-sm">
-                                    <a href="#" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
-                                        ¿Olvidaste tu contraseña?
-                                    </a>
-                                </div>
-                            </div>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-neutral-400" />
-                                </div>
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-neutral-700">
+                                Contraseña
+                            </label>
+                            <div className="mt-1">
                                 <input
                                     id="password"
                                     name="password"
                                     type="password"
-                                    autoComplete="current-password"
                                     required
-                                    className="block w-full pl-10 pr-3 py-3 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50 dark:bg-neutral-950/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500/50 sm:text-sm transition-all outline-none"
-                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="appearance-none block w-full px-4 py-3 bg-white text-neutral-900 border border-neutral-200 rounded-xl shadow-sm placeholder-neutral-400 focus:outline-none focus:ring-[#FF4F8B] focus:border-[#FF4F8B] sm:text-sm transition-colors"
                                 />
                             </div>
                         </div>
@@ -70,43 +112,13 @@ export default function LoginPage() {
                         <div>
                             <button
                                 type="submit"
-                                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900 dark:focus:ring-white transition-all overflow-hidden"
+                                disabled={isLoading}
+                                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-[#FF4F8B] hover:bg-[#E11D62] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF4F8B] disabled:opacity-70 transition-all"
                             >
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                                    <Lock className="h-5 w-5 text-neutral-500 dark:text-neutral-400 group-hover:scale-110 transition-transform" aria-hidden="true" />
-                                </span>
-                                Iniciar Sesión
-                                <span className="absolute inset-y-0 right-0 flex items-center pr-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <ArrowRight className="h-5 w-5" aria-hidden="true" />
-                                </span>
+                                {isLoading ? 'Comprobando...' : 'Iniciar Sesión'}
                             </button>
                         </div>
                     </form>
-
-                    <div className="mt-8">
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-neutral-200 dark:border-neutral-800" />
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white dark:bg-neutral-900 text-neutral-500">O ingresa con</span>
-                            </div>
-                        </div>
-
-                        <div className="mt-6 flex gap-3">
-                            <button className="w-full flex items-center justify-center py-2.5 px-4 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm bg-white dark:bg-neutral-950 text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">
-                                <Github className="h-5 w-5 mr-2" />
-                                GitHub
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
-                <div className="px-8 py-4 bg-neutral-50 dark:bg-neutral-950/30 border-t border-neutral-200 dark:border-neutral-800 text-center text-sm text-neutral-500">
-                    ¿No tienes una cuenta?{' '}
-                    <Link href="#" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
-                        Regístrate aquí
-                    </Link>
                 </div>
             </div>
         </div>
