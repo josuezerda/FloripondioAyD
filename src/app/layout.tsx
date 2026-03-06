@@ -22,9 +22,6 @@ const justHello = localFont({
 export const metadata: Metadata = {
   title: 'Floripondio - Organización y Cursos',
   description: 'Plataforma oficial de Floripondio para Cursos, Servicios de Organización y Productos Exclusivos.',
-  icons: {
-    icon: '/favicon.ico',
-  },
 };
 
 export default function RootLayout({
