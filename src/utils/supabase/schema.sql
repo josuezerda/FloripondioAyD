@@ -58,8 +58,12 @@ create table if not exists public.promos (
   price numeric not null,
   real_price numeric not null,
   is_active boolean default true not null,
+  image_url text,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Si la tabla promos ya existía, intentamos agregar únicamente la columna image_url
+alter table public.promos add column if not exists image_url text;
 
 -- Insertar promociones actuales por defecto
 insert into public.promos (id, title, description, price, real_price, is_active) values
@@ -144,3 +148,54 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- 5. Create hero_banners table (CMS Slider)
+create table if not exists public.hero_banners (
+  id uuid default uuid_generate_v4() primary key,
+  image_url text not null,
+  title text,
+  subtitle text,
+  button_text text,
+  button_link text,
+  is_active boolean default true not null,
+  order_index integer default 0,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.hero_banners enable row level security;
+
+drop policy if exists "Banners are viewable by everyone." on hero_banners;
+create policy "Banners are viewable by everyone." on hero_banners for select using (true);
+
+drop policy if exists "Admins can do everything on hero_banners" on hero_banners;
+create policy "Admins can do everything on hero_banners" on hero_banners for all using (public.is_admin());
+
+drop trigger if exists handle_hero_banners_updated_at on public.hero_banners;
+create trigger handle_hero_banners_updated_at
+  before update on public.hero_banners
+  for each row execute procedure public.handle_updated_at();
+
+-- 6. Storage Bucket for CMS Images
+insert into storage.buckets (id, name, public) 
+values ('public_assets', 'public_assets', true) 
+on conflict do nothing;
+
+-- Storage Policies for 'public_assets' bucket
+drop policy if exists "Public Access" on storage.objects;
+create policy "Public Access" on storage.objects for select using ( bucket_id = 'public_assets' );
+
+drop policy if exists "Admin Insert" on storage.objects;
+create policy "Admin Insert" on storage.objects for insert using ( 
+    bucket_id = 'public_assets' and public.is_admin()
+);
+
+drop policy if exists "Admin Update" on storage.objects;
+create policy "Admin Update" on storage.objects for update using ( 
+    bucket_id = 'public_assets' and public.is_admin()
+);
+
+drop policy if exists "Admin Delete" on storage.objects;
+create policy "Admin Delete" on storage.objects for delete using ( 
+    bucket_id = 'public_assets' and public.is_admin()
+);
